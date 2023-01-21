@@ -206,7 +206,7 @@ contractParams = RegulatorParams
 contractName :: [Char]
 contractName = "Regulator"
 
--- {-----------------------UNTYPED---------------------}
+-- {----------------COMMENT IT OUT FOR REGULATOR UNTYPED VALIDATION--------------}
 
 -- contractValidator
 --     :: RegulatorParams
@@ -218,9 +218,9 @@ contractName = "Regulator"
 -- contractMKScript :: Script
 -- contractMKScript = unMintingPolicyScript $ mkRegulatorMintingPolicy contractParams
 
--- {---------------------------------------------------}
+-- {-----------------------------------------------------------------------------}
 
-{-----------------------TYPED---------------------}
+-- {-----------------COMMENT IT OUT FOR REGULATOR TYPED VALIDATION---------------}
 
 contractValidator
     :: RegulatorParams
@@ -232,7 +232,7 @@ contractValidator = regulatorMintingPolicy
 contractMKScript :: Script
 contractMKScript = unMintingPolicyScript $ mkRegulatorMintingPolicy contractParams
 
-{---------------------------------------------------}
+{--------------------------------------------------------------------------------}
 
 contractDescription :: TextEnvelopeDescr
 contractDescription  = "This is minter contract which regulate minting and burning Happy Token for dev team"

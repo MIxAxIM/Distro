@@ -83,7 +83,7 @@ distroValidator DistroParams{..} rawDatum rawRedeemer rawCTX =
                                 &&  length (flattenValue txInfoMint) == 1
 
                                         {-|---------------------------------Time Handling------------------------------------|-}
-                                -- &&  from dateOfPhaseOne `contains` txInfoValidRange
+                                &&  from dateOfPhaseOne `contains` txInfoValidRange
 
                                         {-|---------------------------------Datum Handling-----------------------------------|-}
                                 &&  not firstDevDidPhaseOne
@@ -111,7 +111,7 @@ distroValidator DistroParams{..} rawDatum rawRedeemer rawCTX =
                                 &&  length (flattenValue txInfoMint) == 1
 
                                         {-|---------------------------------Time Handling------------------------------------|-}
-                                -- &&  from dateOfPhaseOne `contains` txInfoValidRange
+                                &&  from dateOfPhaseOne `contains` txInfoValidRange
 
                                         {-|---------------------------------Datum Handling-----------------------------------|-}
                                 &&  not secondDevDidPhaseOne
@@ -165,7 +165,7 @@ distroValidator DistroParams{..} rawDatum rawRedeemer rawCTX =
                                 &&  length (flattenValue txInfoMint) == 1
 
                                         {-|---------------------------------Time Handling------------------------------------|-}
-                                -- &&  from dateOfPhaseTwo `contains` txInfoValidRange
+                                &&  from dateOfPhaseTwo `contains` txInfoValidRange
 
                                         {-|---------------------------------Datum Handling-----------------------------------|-}
                                 &&  not firstDevDidPhaseTwo
@@ -201,7 +201,7 @@ distroValidator DistroParams{..} rawDatum rawRedeemer rawCTX =
                                 &&  length (flattenValue txInfoMint) == 1
 
                                         {-|---------------------------------Time Handling------------------------------------|-}
-                                -- &&  from dateOfPhaseTwo `contains` txInfoValidRange
+                                &&  from dateOfPhaseTwo `contains` txInfoValidRange
 
                                         {-|---------------------------------Datum Handling-----------------------------------|-}
                                 &&  not secondDevDidPhaseTwo

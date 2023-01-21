@@ -214,7 +214,8 @@ contractParams = DistroParams
 contractName :: [Char]
 contractName = "Distro"
 
-{--------------COMMENT IT OUT FOR DISTRO TYPED VALIDATION-----------------}
+{----------------COMMENT IT OUT FOR DISTRO TYPED VALIDATION-------------------}
+
 contractValidator
     :: DistroParams
     -> DistroDatum
@@ -226,7 +227,10 @@ contractValidator = distroValidator
 contractMKScript :: Script
 contractMKScript = unValidatorScript $ validatorScript $ mkDistroValidator contractParams
 
-{-------------COMMENT IT OUT FOR DISTRO UNTYPED VALIDATION----------------}
+{-----------------------------------------------------------------------------}
+
+{---------------COMMENT IT OUT FOR DISTRO UNTYPED VALIDATION------------------}
+
 -- contractValidator
 --     :: DistroParams
 --     -> BuiltinData
@@ -237,6 +241,8 @@ contractMKScript = unValidatorScript $ validatorScript $ mkDistroValidator contr
 
 -- contractMKScript :: Script
 -- contractMKScript = unValidatorScript $ mkDistroValidator contractParams
+
+{-----------------------------------------------------------------------------}
 
 contractDescription :: TextEnvelopeDescr
 contractDescription  = "This is distro contract which govern distribution of Happy token"

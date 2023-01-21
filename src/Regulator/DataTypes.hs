@@ -66,7 +66,6 @@ data RegulatorParams = RegulatorParams
         deriving
             (Haskell.Eq, Haskell.Ord, Haskell.Show, Generic)
 
-
 PlutusTx.makeLift ''RegulatorParams
 
 

@@ -57,7 +57,7 @@ regulatorMintingPolicy
     ctx@ScriptContext{ scriptContextTxInfo = TxInfo{..}}
 
     -----------------------------------------------------------------------------------------
-    -- |                                   GENESIS MINT                                    |--
+    -- |                                   GENESIS MINT                                   |--
     -----------------------------------------------------------------------------------------
     |   GenesisMint <- redeemer
     ,   DistroDatum

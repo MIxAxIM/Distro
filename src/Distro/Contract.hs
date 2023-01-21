@@ -61,7 +61,7 @@ distroValidator DistroParams{..} datum redeemer ctx@ScriptContext{ scriptContext
         (PhaseOneClaimingToken mintingContractCS
             , DistroDatum happyToken PhaseOneInfo{..} phaseTwoInfo ) ->
                 case getTxOutInlineDatum singleScriptOutputUTxO of
-                Nothing           ->    traceIfFalse "The Output UTxO Does Not Have Inlineeee Datum" False
+                Nothing           ->    traceIfFalse "The Output UTxO Does Not Have Inline Datum" False
                 Just outputDatum  ->    case outputDatum of
                     (DistroDatum
                         happyToken'
@@ -88,7 +88,7 @@ distroValidator DistroParams{..} datum redeemer ctx@ScriptContext{ scriptContext
                                         si1 = traceIfFalse "First Developer Must Sign Tx"                       $ txSignedBy ctxTxInfo (getPaymentPKH firstDevAddress)
 
                                                     {-|---------------------------------Time Handling------------------------------------|-}
-                                        -- th1 = traceIfFalse "Phase One Date Has Not Been Reached"                $ from dateOfPhaseOne `contains` txInfoValidRange
+                                        th1 = traceIfFalse "Phase One Date Has Not Been Reached"                $ from dateOfPhaseOne `contains` txInfoValidRange
 
                                                     {-|---------------------------------Datum Handling-----------------------------------|-}
                                         dh1 = traceIfFalse "Phase One Tokens Were Minted By First Dev"          $ not firstDevDidPhaseOne

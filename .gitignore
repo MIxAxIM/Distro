@@ -2,4 +2,3 @@ dist-newstyle
 .vscode
 .editorconfig
 utils/wallets
-utils/scripts/consumeCollateral

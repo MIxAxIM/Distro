@@ -81,7 +81,7 @@ distroValidator DistroParams{..} rawDatum rawRedeemer rawCTX
     ,   txSignedBy ctxTxInfo (getPaymentPKH firstDevAddress)
 
                     {-|---------------------------------Time Handling------------------------------------|-}
-    -- ,   from dateOfPhaseOne `contains` txInfoValidRange
+    ,   from dateOfPhaseOne `contains` txInfoValidRange
 
                     {-|---------------------------------Datum Handling-----------------------------------|-}
     ,   not firstDevDidPhaseOne
@@ -184,7 +184,7 @@ distroValidator DistroParams{..} rawDatum rawRedeemer rawCTX
     ,   txSignedBy ctxTxInfo (getPaymentPKH firstDevAddress)
 
                 {-|---------------------------------Time Handling------------------------------------|-}
-    -- ,   from dateOfPhaseTwo `contains` txInfoValidRange
+    ,   from dateOfPhaseTwo `contains` txInfoValidRange
 
                 {-|---------------------------------Datum Handling-----------------------------------|-}
     ,   not firstDevDidPhaseTwo

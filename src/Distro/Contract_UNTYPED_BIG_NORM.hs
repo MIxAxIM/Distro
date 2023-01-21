@@ -60,7 +60,7 @@ distroValidator DistroParams{..} rawDatum rawRedeemer rawCTX =
         -----------------------------------------------------------------------------------------
         (PhaseOneClaimingToken mintingContractCS
             , DistroDatum happyToken PhaseOneInfo{..} phaseTwoInfo ) -> case getTxOutInlineDatum singleScriptOutputUTxO of
-                Nothing           ->    traceIfFalse "The Output UTxO Does Not Have Inline Datummm" False
+                Nothing           ->    traceIfFalse "The Output UTxO Does Not Have Inline Datum" False
                 Just outputDatum  ->    case outputDatum of
                     (DistroDatum
                         happyToken'
