@@ -29,10 +29,10 @@ import           Plutus.V2.Ledger.Contexts (ScriptContext (..),
                                             ownCurrencySymbol, txSignedBy)
 import           Plutus.V2.Ledger.Tx       (OutputDatum (..))
 import           PlutusTx                  (BuiltinData, unsafeFromBuiltinData)
-import           PlutusTx.Prelude          (Bool (False, True), Maybe (Just),
-                                            any, error, filter, length,
-                                            otherwise, traceError, traceIfFalse,
-                                            ($), (&&), (==))
+import           PlutusTx.Prelude          (Bool (False), Maybe (Just), any,
+                                            error, filter, length, otherwise,
+                                            traceError, traceIfFalse, ($), (&&),
+                                            (==))
 
 import           Distro.DataTypes          (DistroDatum (..), PhaseOneInfo (..),
                                             PhaseTwoInfo (..))
@@ -45,7 +45,7 @@ import           Regulator.DataTypes       (DevTeamAddresses (..),
 {-==============================================================================================================================-}
 
 {-# INLINABLE regulatorMintingPolicy #-}
-regulatorMintingPolicy :: RegulatorParams -> RegulatorAction -> ScriptContext -> Bool
+regulatorMintingPolicy :: RegulatorParams -> BuiltinData -> BuiltinData -> ()
 regulatorMintingPolicy
     RegulatorParams
         {   phaseOneInfo = PhaseOneInfo{..}
@@ -53,8 +53,8 @@ regulatorMintingPolicy
         ,   devTeamAddresses = DevTeamAddresses{..}
         , ..
         }
-    redeemer
-    ctx@ScriptContext{ scriptContextTxInfo = TxInfo{..}}
+    rawRedeemer
+    rawCTX
 
     -----------------------------------------------------------------------------------------
     -- |                                   GENESIS MINT                                    |--
@@ -90,7 +90,7 @@ regulatorMintingPolicy
     ,   traceIfFalse "secondDevPhaseTwoClaimAmount Mismatched"  $ secondDevPhaseTwoClaimAmount  ==  secondDevPhaseTwoClaimAmount'
     ,   traceIfFalse "secondDevDidPhaseTwo Mismatched"          $ secondDevDidPhaseTwo          ==  secondDevDidPhaseTwo'
     ,   traceIfFalse "dateOfPhaseTwo Mismatched"                $ dateOfPhaseTwo                ==  dateOfPhaseTwo'
-    =   True
+    =   ()
 
     -----------------------------------------------------------------------------------------
     -- |                              FIRST DEVELOPER MINT                                |--
@@ -99,7 +99,7 @@ regulatorMintingPolicy
     ,   traceIfFalse "First Developer Must Sign"                $ txSignedBy ctxTxInfo (getPaymentPKH firstDevAddress)
     ,   traceIfFalse "First Developer Address Mismatch"         $ firstDevAddress == firstDevAddress'
     ,   traceIfFalse "Distro Contract Must Be Present at Tx"    isDistroSCPresent
-    =   True
+    =   ()
 
     -----------------------------------------------------------------------------------------
     -- |                              SECOND DEVELOPER MINT                               |--
@@ -108,21 +108,27 @@ regulatorMintingPolicy
     ,   traceIfFalse "Second Developer Must Sign"               $ txSignedBy ctxTxInfo (getPaymentPKH secondDevAddress)
     ,   traceIfFalse "Second Developer Address Mismatch"        $ secondDevAddress == secondDevAddress'
     ,   traceIfFalse "Distro Contract Must Be Present at Tx"    isDistroSCPresent
-    =   True
+    =   ()
 
     -----------------------------------------------------------------------------------------
     -- |                                 DEBUGGER ACTION                                  |--
     -----------------------------------------------------------------------------------------
     |   RegulatorDebuggerAction <- redeemer
     ,   traceIfFalse "Regulator Debugger Must Sign"  $ txSignedBy ctxTxInfo regulatorDebuggerPKH
-    =   True
+    =   ()
 
     -----------------------------------------------------------------------------------------
     -- |                                 ANY OTHER CASE                                   |--
     -----------------------------------------------------------------------------------------
-    |   otherwise   =   False
+    |   otherwise   =   error()
 
             where
+
+                redeemer :: RegulatorAction
+                redeemer = unsafeFromBuiltinData @RegulatorAction rawRedeemer
+
+                ctx :: ScriptContext
+                ctx@ScriptContext{ scriptContextTxInfo = TxInfo{..}}  = unsafeFromBuiltinData @ScriptContext rawCTX
 
                 ctxTxInfo :: TxInfo
                 ctxTxInfo = scriptContextTxInfo ctx
@@ -147,7 +153,8 @@ regulatorMintingPolicy
 
                 justOneTxOutToDistro :: TxOut
                 justOneTxOutToDistro
-                    | [o] <- filter (\o -> txOutAddress o == scriptHashAddress distroContractVH ) txInfoOutputs
+                    | length txInfoOutputs == 1
+                    , [o] <- filter (\o -> txOutAddress o == scriptHashAddress distroContractVH ) txInfoOutputs
                     = o
                     | otherwise = traceError "No TxOut To Distro SC"
 

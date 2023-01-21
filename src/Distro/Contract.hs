@@ -50,17 +50,18 @@ import           Regulator.DataTypes       (RegulatorAction (..))
 {-==============================================================================================================================-}
 
 {-# INLINABLE distroValidator #-}
-distroValidator :: DistroParams -> BuiltinData -> BuiltinData -> BuiltinData -> ()
-distroValidator DistroParams{..} rawDatum rawRedeemer rawCTX =
+distroValidator :: DistroParams -> DistroDatum -> DistroAction -> ScriptContext -> Bool
+distroValidator DistroParams{..} datum redeemer ctx@ScriptContext{ scriptContextTxInfo = TxInfo{..} } =
 
-    if case (redeemer , datum) of
+    case (redeemer , datum) of
 
         -----------------------------------------------------------------------------------------
         -- |                        PHASE ONE CLAIMING HAPPY TOKEN                            |--
         -----------------------------------------------------------------------------------------
         (PhaseOneClaimingToken mintingContractCS
-            , DistroDatum happyToken PhaseOneInfo{..} phaseTwoInfo ) -> case getTxOutInlineDatum singleScriptOutputUTxO of
-                Nothing           ->    traceIfFalse "The Output UTxO Does Not Have Inline Datummm" False
+            , DistroDatum happyToken PhaseOneInfo{..} phaseTwoInfo ) ->
+                case getTxOutInlineDatum singleScriptOutputUTxO of
+                Nothing           ->    traceIfFalse "The Output UTxO Does Not Have Inlineeee Datum" False
                 Just outputDatum  ->    case outputDatum of
                     (DistroDatum
                         happyToken'
@@ -349,21 +350,16 @@ distroValidator DistroParams{..} rawDatum rawRedeemer rawCTX =
             ) ->
                 traceIfFalse "Distro Debugger Must Sign"  $ txSignedBy ctxTxInfo distroDebuggerPKH
 
-    then    ()  else    error()
-
         where
-
-            datum :: DistroDatum
-            datum = unsafeFromBuiltinData @DistroDatum rawDatum
-
-            redeemer :: DistroAction
-            redeemer = unsafeFromBuiltinData @DistroAction rawRedeemer
-
-            ctx :: ScriptContext
-            ctx@ScriptContext{ scriptContextTxInfo = TxInfo{..} }  = unsafeFromBuiltinData @ScriptContext rawCTX
 
             ctxTxInfo :: TxInfo
             ctxTxInfo = scriptContextTxInfo ctx
+
+            --  txInfoRedeemers ==  [   (Minting    CurrencySymbol      ,   Redeemer)
+            --                      ,   (Spending   TxOutRef            ,   Redeemer)
+            --                      ,   (Rewarding  StakingCredential   ,   Redeemer)
+            --                      ,   (Certifying DCert               ,   Redeemer)
+            --                      ]
 
             getMintingRedeemer :: CurrencySymbol -> RegulatorAction
             getMintingRedeemer cs

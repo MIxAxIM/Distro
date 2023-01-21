@@ -34,12 +34,10 @@ import           PlutusTx.Prelude          (Bool (False), Maybe (Just), any,
                                             traceError, traceIfFalse, ($), (&&),
                                             (==))
 
-import           Distro.DataTypes          (DistroDatum (..), PhaseOneInfo (..),
-                                            PhaseTwoInfo (..))
+import           Distro.DataTypes          (DistroDatum (..))
 import           Regulator.DataTypes       (DevTeamAddresses (..),
                                             RegulatorAction (..),
                                             RegulatorParams (..))
-
 
 {-==============================================================================================================================-}
 {-==========                                          MINTING POLICY SECTION                                          ==========-}
@@ -47,74 +45,43 @@ import           Regulator.DataTypes       (DevTeamAddresses (..),
 
 {-# INLINABLE regulatorMintingPolicy #-}
 regulatorMintingPolicy :: RegulatorParams -> BuiltinData -> BuiltinData -> ()
-regulatorMintingPolicy
-    RegulatorParams
-        {   phaseOneInfo = PhaseOneInfo{..}
-        ,   phaseTwoInfo = PhaseTwoInfo{..}
-        ,   devTeamAddresses = DevTeamAddresses{..}
-        , ..
-        }
-    rawRedeemer
-    rawCTX
+regulatorMintingPolicy RegulatorParams{ devTeamAddresses = DevTeamAddresses{..}, ..} rawRedeemer rawCTX
 
     -----------------------------------------------------------------------------------------
     -- |                                   GENESIS MINT                                   |--
     -----------------------------------------------------------------------------------------
     |   GenesisMint <- redeemer
+    ,   DistroDatum happyToken phaseOneInfo' phaseTwoInfo' <- getTxOutInlineDatum txOutToDistro
+    ,   traceIfFalse "Only 1 Happy Token Must Be Minted"          isTokenMintedCorrectly
+    ,   traceIfFalse "Happy Token Must Be At Distro SC Output"  $ valueOf (txOutValue txOutToDistro) (ownCurrencySymbol ctx) happyTokenName == 1
+    ,   traceIfFalse "Happy Token Info Mismatched"              $ happyToken == assetClass (ownCurrencySymbol ctx) happyTokenName
+    ,   traceIfFalse "Only 1 Output is Allowed"                 $ length txInfoOutputs == 2
 
-    ,   DistroDatum
-            happyToken
-            (PhaseOneInfo
-                firstDevPhaseOneClaimAmount'
-                firstDevDidPhaseOne'
-                secondDevPhaseOneClaimAmount'
-                secondDevDidPhaseOne'
-                dateOfPhaseOne')
-            (PhaseTwoInfo
-                firstDevPhaseTwoClaimAmount'
-                firstDevDidPhaseTwo'
-                secondDevPhaseTwoClaimAmount'
-                secondDevDidPhaseTwo'
-                dateOfPhaseTwo') <- getTxOutInlineDatum txOutToDistro
-
-    ,   isTokenMintedCorrectly
-    ,   valueOf (txOutValue txOutToDistro) (ownCurrencySymbol ctx) happyTokenName == 1
-    ,   happyToken      ==  assetClass (ownCurrencySymbol ctx) happyTokenName
-
-    ,   firstDevPhaseOneClaimAmount   ==  firstDevPhaseOneClaimAmount'
-    ,   firstDevDidPhaseOne           ==  firstDevDidPhaseOne'
-    ,   secondDevPhaseOneClaimAmount  ==  secondDevPhaseOneClaimAmount'
-    ,   secondDevDidPhaseOne          ==  secondDevDidPhaseOne'
-    ,   dateOfPhaseOne                ==  dateOfPhaseOne'
-
-    ,   firstDevPhaseTwoClaimAmount   ==  firstDevPhaseTwoClaimAmount'
-    ,   firstDevDidPhaseTwo           ==  firstDevDidPhaseTwo'
-    ,   secondDevPhaseTwoClaimAmount  ==  secondDevPhaseTwoClaimAmount'
-    ,   secondDevDidPhaseTwo          ==  secondDevDidPhaseTwo'
-    ,   dateOfPhaseTwo                ==  dateOfPhaseTwo'
+    ,   traceIfFalse "phaseOneInfo Mismatched"                  $ phaseOneInfo ==  phaseOneInfo'
+    ,   traceIfFalse "phaseTwoInfo Mismatched"                  $ phaseTwoInfo ==  phaseTwoInfo'
     =   ()
 
     -----------------------------------------------------------------------------------------
-    -- |                              FIRST DEVELOPER MINT                                |--
+    -- |                              FIRST DEVELOPER MINT                                 |--
     -----------------------------------------------------------------------------------------
     |   FirstDeveloperAction <- redeemer
-    ,   txSignedBy ctxTxInfo (getPaymentPKH firstDevAddress)
-    ,   isDistroSCPresent
+    ,   traceIfFalse "First Developer Must Sign"                $ txSignedBy ctxTxInfo (getPaymentPKH firstDevAddress)
+    ,   traceIfFalse "Distro Contract Must Be Present at Tx"    isDistroSCPresent
     =   ()
 
     -----------------------------------------------------------------------------------------
     -- |                              SECOND DEVELOPER MINT                               |--
     -----------------------------------------------------------------------------------------
     |   SecondDeveloperAction <- redeemer
-    ,   txSignedBy ctxTxInfo (getPaymentPKH secondDevAddress)
-    ,   isDistroSCPresent
+    ,   traceIfFalse "Second Developer Must Sign"               $ txSignedBy ctxTxInfo (getPaymentPKH secondDevAddress)
+    ,   traceIfFalse "Distro Contract Must Be Present at Tx"    isDistroSCPresent
     =   ()
 
     -----------------------------------------------------------------------------------------
     -- |                                 DEBUGGER ACTION                                  |--
     -----------------------------------------------------------------------------------------
     |   RegulatorDebuggerAction <- redeemer
-    ,   txSignedBy ctxTxInfo regulatorDebuggerPKH
+    ,   traceIfFalse "Regulator Debugger Must Sign"  $ txSignedBy ctxTxInfo regulatorDebuggerPKH
     =   ()
 
     -----------------------------------------------------------------------------------------
@@ -136,12 +103,12 @@ regulatorMintingPolicy
                 getPaymentPKH :: Address -> PubKeyHash
                 getPaymentPKH address
                     | Just pkh <- toPubKeyHash address = pkh
-                    | otherwise = error()
+                    | otherwise = traceError "No PubKeyHash"
 
                 getTxOutInlineDatum :: TxOut -> DistroDatum
                 getTxOutInlineDatum tx
                     | ( OutputDatum ( Datum inline )) <- txOutDatum tx = unsafeFromBuiltinData @DistroDatum inline
-                    | otherwise = error()
+                    | otherwise = traceError "No Inline Datum"
 
                 isTokenMintedCorrectly :: Bool
                 isTokenMintedCorrectly
@@ -151,7 +118,7 @@ regulatorMintingPolicy
                 txOutToDistro :: TxOut
                 txOutToDistro
                     | [o] <- filter (\o -> txOutAddress o == scriptHashAddress distroContractVH ) txInfoOutputs = o
-                    | otherwise = error()
+                    | otherwise = traceError "No TxOut To Distro SC"
 
                 isDistroSCPresent :: Bool
                 isDistroSCPresent =

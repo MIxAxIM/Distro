@@ -79,7 +79,7 @@ distroValidator DistroParams{..} rawDatum rawRedeemer rawCTX
                     {-|---------------------------------Signatories--------------------------------------|-}
     ,   traceIfFalse "First Developer Must Sign Tx"               $ txSignedBy ctxTxInfo (getPaymentPKH firstDevAddress)
                     {-|---------------------------------Time Handling------------------------------------|-}
-    -- ,   traceIfFalse "Phase One Date Has Not Been Reached"        $ from dateOfPhaseOne `contains` txInfoValidRange
+    ,   traceIfFalse "Phase One Date Has Not Been Reached"        $ from dateOfPhaseOne `contains` txInfoValidRange
                     {-|---------------------------------Datum Handling-----------------------------------|-}
     ,   traceIfFalse "Phase One Tokens Were Minted By First Dev"  $ not firstDevDidPhaseOne
 
@@ -128,7 +128,7 @@ distroValidator DistroParams{..} rawDatum rawRedeemer rawCTX
     ,   traceIfFalse "Second Developer Must Sign Tx"                $ txSignedBy ctxTxInfo (getPaymentPKH secondDevAddress)
 
                 {-|---------------------------------Time Handling------------------------------------|-}
-    -- ,   traceIfFalse "Phase One Date Has Not Been Reached"          $ from dateOfPhaseOne `contains` txInfoValidRange
+    ,   traceIfFalse "Phase One Date Has Not Been Reached"          $ from dateOfPhaseOne `contains` txInfoValidRange
 
                 {-|---------------------------------Datum Handling-----------------------------------|-}
     ,   traceIfFalse "Phase One Tokens Were Minted By Second Dev"   $ not secondDevDidPhaseOne
@@ -186,7 +186,7 @@ distroValidator DistroParams{..} rawDatum rawRedeemer rawCTX
     ,   traceIfFalse "First Developer Must Sign Tx"                 $ txSignedBy ctxTxInfo (getPaymentPKH firstDevAddress)
 
                 {-|---------------------------------Time Handling------------------------------------|-}
-    -- ,   traceIfFalse "Phase Two Date Has Not Been Reached"          $ from dateOfPhaseTwo `contains` txInfoValidRange
+    ,   traceIfFalse "Phase Two Date Has Not Been Reached"          $ from dateOfPhaseTwo `contains` txInfoValidRange
 
                 {-|---------------------------------Datum Handling-----------------------------------|-}
     ,   traceIfFalse "Phase Two Tokens Were Minted By First Dev"    $ not firstDevDidPhaseTwo
@@ -250,7 +250,7 @@ distroValidator DistroParams{..} rawDatum rawRedeemer rawCTX
     ,   traceIfFalse "Second Developer Must Sign Tx"                $ txSignedBy ctxTxInfo (getPaymentPKH secondDevAddress)
 
                 {-|---------------------------------Time Handling------------------------------------|-}
-    -- ,   traceIfFalse "Phase Two Date Has Not Been Reached"          $ from dateOfPhaseTwo `contains` txInfoValidRange
+    ,   traceIfFalse "Phase Two Date Has Not Been Reached"          $ from dateOfPhaseTwo `contains` txInfoValidRange
 
                 {-|---------------------------------Datum Handling-----------------------------------|-}
     ,   traceIfFalse "Phase Two Tokens Were Minted By Second Dev"   $ not secondDevDidPhaseTwo

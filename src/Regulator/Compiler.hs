@@ -26,6 +26,23 @@ module Regulator.Compiler
     )
         where
 
+{-------------------------DUMP PLUTUS CORE------------------------}
+-- {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:dump-uplc #-}
+-- {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:dump-plc #-}
+-- {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:dump-pir #-}
+
+{--------------------REMOVE ALL ERROR MESSAGES--------------------}
+-- {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:no-context #-}
+-- {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:remove-trace #-}
+
+{------------------------------DEBUG-------------------------------}
+-- {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:coverage-all=True #-}
+-- {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:coverage-boolean=True #-}
+-- {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:coverage-location=True #-}
+-- {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:debug=True #-}
+-- {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:debug-context=3 #-}
+-- {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:verbose=True #-}
+
 import           Cardano.Api.SerialiseTextEnvelope      (TextEnvelopeDescr,
                                                          textEnvelopeToJSON,
                                                          writeFileTextEnvelope)
@@ -44,7 +61,8 @@ import           Data.List.Split                        (chunksOf)
 import           Plutus.ApiCommon                       (ProtocolVersion (..))
 import           Plutus.Script.Utils.V2.Scripts         (scriptHash,
                                                          validatorHash)
-import           Plutus.Script.Utils.V2.Typed.Scripts   (validatorScript)
+import           Plutus.Script.Utils.V2.Typed.Scripts   (mkUntypedMintingPolicy,
+                                                         validatorScript)
 import           Plutus.V1.Ledger.Scripts               (MintingPolicy, Script,
                                                          mkMintingPolicyScript,
                                                          scriptSize,
@@ -59,6 +77,7 @@ import           Plutus.V2.Ledger.Api                   (ExBudget (..),
                                                          exBudgetMemory,
                                                          mkEvaluationContext,
                                                          toData)
+import           Plutus.V2.Ledger.Contexts              (ScriptContext)
 import           PlutusCore                             (DefaultFun, DefaultUni,
                                                          defaultCostModelParams)
 import           PlutusCore.Evaluation.Machine.ExMemory (CostingInteger)
@@ -91,7 +110,6 @@ import qualified Plutonomy
 -- |                               CONTRACT IMPORTS                                   | --
 ------------------------------------------------------------------------------------------
 
--- import           Plutus.V1.Ledger.Scripts     (ValidatorHash)
 import qualified Distro.Compiler                        as Distro
 import           Distro.DataTypes                       (PhaseOneInfo (..),
                                                          PhaseTwoInfo (..))
@@ -115,14 +133,31 @@ import           Regulator.ToJSON                       (dateOfPhaseOne',
                                                          secondDevPhaseTwoClaimAmount'')
 
 ------------------------------------------------------------------------------------------
--- |                          COMPILATION & OPTIMIZATION                              | --
+-- |                    TYPED COMPILATION & NO OPTIMIZATION                           | --
 ------------------------------------------------------------------------------------------
 
 mkRegulatorMintingPolicy :: RegulatorParams -> MintingPolicy
 mkRegulatorMintingPolicy regulatorParams = Plutonomy.optimizeUPLC
-                                            $   mkMintingPolicyScript
-                                                $   $$(compile [|| regulatorMintingPolicy ||])
-                                                    `applyCode` liftCode regulatorParams
+                                                $   mkMintingPolicyScript
+                                                    $   $$(compile [|| mkUntypedMintingPolicy . regulatorMintingPolicy ||])
+                                                        `applyCode` liftCode regulatorParams
+
+-- mkRegulatorMintingPolicy :: RegulatorParams -> MintingPolicy
+-- mkRegulatorMintingPolicy regulatorParams = Plutonomy.optimizeUPLCWith
+--                                                 Plutonomy.aggressiveOptimizerOptions
+--                                                 $   mkMintingPolicyScript
+--                                                     $   $$(compile [|| mkUntypedMintingPolicy . regulatorMintingPolicy ||])
+--                                                         `applyCode` liftCode regulatorParams
+
+------------------------------------------------------------------------------------------
+-- |                     UNTYPED COMPILATION & OPTIMIZATION                           | --
+------------------------------------------------------------------------------------------
+
+-- mkRegulatorMintingPolicy :: RegulatorParams -> MintingPolicy
+-- mkRegulatorMintingPolicy regulatorParams = Plutonomy.optimizeUPLC
+--                                             $   mkMintingPolicyScript
+--                                                 $   $$(compile [|| regulatorMintingPolicy ||])
+--                                                     `applyCode` liftCode regulatorParams
 
 -- mkRegulatorMintingPolicy :: RegulatorParams -> MintingPolicy
 -- mkRegulatorMintingPolicy regulatorParams = Plutonomy.optimizeUPLCWith
@@ -139,8 +174,13 @@ type ContractParams = RegulatorParams
 
 contractParams :: ContractParams
 contractParams = RegulatorParams
-    -- {   distroContractVH        =   validatorHash $ validatorScript $ Distro.mkDistroValidator Distro.contractParams
-    {   distroContractVH        =   validatorHash $ Distro.mkDistroValidator Distro.contractParams
+
+{--------------COMMENT IT OUT FOR DISTRO TYPED VALIDATION-----------------}
+    {   distroContractVH        =   validatorHash $ validatorScript $ Distro.mkDistroValidator Distro.contractParams
+
+{-------------COMMENT IT OUT FOR DISTRO UNTYPED VALIDATION----------------}
+    -- {   distroContractVH        =   validatorHash $ Distro.mkDistroValidator Distro.contractParams
+
     ,   happyTokenName          =   happyTokenName'
     ,   phaseOneInfo            =   PhaseOneInfo
                                         {   firstDevPhaseOneClaimAmount     =  firstDevPhaseOneClaimAmount'
@@ -166,15 +206,33 @@ contractParams = RegulatorParams
 contractName :: [Char]
 contractName = "Regulator"
 
+-- {-----------------------UNTYPED---------------------}
+
+-- contractValidator
+--     :: RegulatorParams
+--     -> BuiltinData
+--     -> BuiltinData
+--     -> ()
+-- contractValidator = regulatorMintingPolicy
+
+-- contractMKScript :: Script
+-- contractMKScript = unMintingPolicyScript $ mkRegulatorMintingPolicy contractParams
+
+-- {---------------------------------------------------}
+
+{-----------------------TYPED---------------------}
+
 contractValidator
     :: RegulatorParams
-    -> BuiltinData
-    -> BuiltinData
-    -> ()
+    -> RegulatorAction
+    -> ScriptContext
+    -> Bool
 contractValidator = regulatorMintingPolicy
 
 contractMKScript :: Script
 contractMKScript = unMintingPolicyScript $ mkRegulatorMintingPolicy contractParams
+
+{---------------------------------------------------}
 
 contractDescription :: TextEnvelopeDescr
 contractDescription  = "This is minter contract which regulate minting and burning Happy Token for dev team"

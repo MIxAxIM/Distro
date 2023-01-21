@@ -28,7 +28,7 @@ import           Data.ByteString.Lazy  (writeFile)
 import           PlutusTx              (ToData, toData)
 import           PlutusTx.Prelude      (Bool (False, True), ($), (.), (<>))
 import           System.Directory      (createDirectoryIfMissing)
-import           System.FilePath.Posix ((<.>), (</>))s
+import           System.FilePath.Posix ((<.>), (</>))
 
 import qualified Prelude               as Haskell
 

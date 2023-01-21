@@ -64,7 +64,7 @@ happyTokenName' :: TokenName
 happyTokenName' = "HAPPY_TOKEN"
 
 happyTokenCurrencySymbol' :: CurrencySymbol
-happyTokenCurrencySymbol' = "520ade25e2dc0e3334a99821c5740de45dd8de4810c0c6d2d322430f"
+happyTokenCurrencySymbol' = "a5b895f0a20a342fadd350615becc3fdc4178dbceb4680027c5fd72b"
 
 happyToken' :: AssetClass
 happyToken' = assetClass happyTokenCurrencySymbol' happyTokenName'

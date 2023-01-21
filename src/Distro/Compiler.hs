@@ -129,25 +129,25 @@ import           Distro.ToJSON                          (firstDevClaimAtPhaseOne
 -- |                    TYPED COMPILATION & NO OPTIMIZATION                           | --
 ------------------------------------------------------------------------------------------
 
--- data DistroDataTypes
--- instance ValidatorTypes DistroDataTypes where
---     type instance DatumType DistroDataTypes = DistroDatum
---     type instance RedeemerType DistroDataTypes = DistroAction
+data DistroDataTypes
+instance ValidatorTypes DistroDataTypes where
+    type instance DatumType DistroDataTypes = DistroDatum
+    type instance RedeemerType DistroDataTypes = DistroAction
 
--- mkDistroValidator :: DistroParams -> TypedValidator DistroDataTypes
--- mkDistroValidator = mkTypedValidatorParam @DistroDataTypes
---                         $$(compile [|| distroValidator ||])
---                         $$(compile [|| mkUntypedValidator ||])
+mkDistroValidator :: DistroParams -> TypedValidator DistroDataTypes
+mkDistroValidator = mkTypedValidatorParam @DistroDataTypes
+                        $$(compile [|| distroValidator ||])
+                        $$(compile [|| mkUntypedValidator ||])
 
 ------------------------------------------------------------------------------------------
 -- |                           COMPILATION & OPTIMIZATION                             | --
 ------------------------------------------------------------------------------------------
 
-mkDistroValidator :: DistroParams -> Validator
-mkDistroValidator distroParams = Plutonomy.optimizeUPLC
-                                    $   mkValidatorScript
-                                        $   $$(compile [|| distroValidator ||])
-                                            `applyCode` liftCode distroParams
+-- mkDistroValidator :: DistroParams -> Validator
+-- mkDistroValidator distroParams = Plutonomy.optimizeUPLC
+--                                     $   mkValidatorScript
+--                                         $   $$(compile [|| distroValidator ||])
+--                                             `applyCode` liftCode distroParams
 
 -- mkDistroValidator :: DistroParams -> Validator
 -- mkDistroValidator distroParams = Plutonomy.optimizeUPLCWith
@@ -214,27 +214,29 @@ contractParams = DistroParams
 contractName :: [Char]
 contractName = "Distro"
 
--- contractValidator
---     :: DistroParams
---     -> DistroDatum
---     -> DistroAction
---     -> ScriptContext
---     -> Bool
--- contractValidator = distroValidator
-
--- contractMKScript :: Script
--- contractMKScript = unValidatorScript $ validatorScript $ mkDistroValidator contractParams
-
+{--------------COMMENT IT OUT FOR DISTRO TYPED VALIDATION-----------------}
 contractValidator
     :: DistroParams
-    -> BuiltinData
-    -> BuiltinData
-    -> BuiltinData
-    -> ()
+    -> DistroDatum
+    -> DistroAction
+    -> ScriptContext
+    -> Bool
 contractValidator = distroValidator
 
 contractMKScript :: Script
-contractMKScript = unValidatorScript $ mkDistroValidator contractParams
+contractMKScript = unValidatorScript $ validatorScript $ mkDistroValidator contractParams
+
+{-------------COMMENT IT OUT FOR DISTRO UNTYPED VALIDATION----------------}
+-- contractValidator
+--     :: DistroParams
+--     -> BuiltinData
+--     -> BuiltinData
+--     -> BuiltinData
+--     -> ()
+-- contractValidator = distroValidator
+
+-- contractMKScript :: Script
+-- contractMKScript = unValidatorScript $ mkDistroValidator contractParams
 
 contractDescription :: TextEnvelopeDescr
 contractDescription  = "This is distro contract which govern distribution of Happy token"

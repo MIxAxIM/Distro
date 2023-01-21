@@ -50,17 +50,17 @@ import           Regulator.DataTypes       (RegulatorAction (..))
 {-==============================================================================================================================-}
 
 {-# INLINABLE distroValidator #-}
-distroValidator :: DistroParams -> DistroDatum -> DistroAction -> ScriptContext -> Bool
-distroValidator DistroParams{..} datum redeemer ctx@ScriptContext{ scriptContextTxInfo = TxInfo{..} } =
+distroValidator :: DistroParams -> BuiltinData -> BuiltinData -> BuiltinData -> ()
+distroValidator DistroParams{..} rawDatum rawRedeemer rawCTX =
 
-    case (redeemer , datum) of
+    if case (redeemer , datum) of
 
         -----------------------------------------------------------------------------------------
         -- |                        PHASE ONE CLAIMING HAPPY TOKEN                            |--
         -----------------------------------------------------------------------------------------
         (PhaseOneClaimingToken mintingContractCS
             , DistroDatum happyToken PhaseOneInfo{..} phaseTwoInfo ) -> case getTxOutInlineDatum singleScriptOutputUTxO of
-                Nothing           ->    traceIfFalse "The Output UTxO Does Not Have Inline Datummmm" False
+                Nothing           ->    traceIfFalse "The Output UTxO Does Not Have Inline Datummm" False
                 Just outputDatum  ->    case outputDatum of
                     (DistroDatum
                         happyToken'
@@ -87,7 +87,7 @@ distroValidator DistroParams{..} datum redeemer ctx@ScriptContext{ scriptContext
                                         si1 = traceIfFalse "First Developer Must Sign Tx"                       $ txSignedBy ctxTxInfo (getPaymentPKH firstDevAddress)
 
                                                     {-|---------------------------------Time Handling------------------------------------|-}
-                                        -- th1 = traceIfFalse "Phase One Date Has Not Been Reached"                $ from dateOfPhaseOne `contains` txInfoValidRange
+                                        th1 = traceIfFalse "Phase One Date Has Not Been Reached"                $ from dateOfPhaseOne `contains` txInfoValidRange
 
                                                     {-|---------------------------------Datum Handling-----------------------------------|-}
                                         dh1 = traceIfFalse "Phase One Tokens Were Minted By First Dev"          $ not firstDevDidPhaseOne
@@ -349,16 +349,21 @@ distroValidator DistroParams{..} datum redeemer ctx@ScriptContext{ scriptContext
             ) ->
                 traceIfFalse "Distro Debugger Must Sign"  $ txSignedBy ctxTxInfo distroDebuggerPKH
 
+    then    ()  else    error()
+
         where
+
+            datum :: DistroDatum
+            datum = unsafeFromBuiltinData @DistroDatum rawDatum
+
+            redeemer :: DistroAction
+            redeemer = unsafeFromBuiltinData @DistroAction rawRedeemer
+
+            ctx :: ScriptContext
+            ctx@ScriptContext{ scriptContextTxInfo = TxInfo{..} }  = unsafeFromBuiltinData @ScriptContext rawCTX
 
             ctxTxInfo :: TxInfo
             ctxTxInfo = scriptContextTxInfo ctx
-
-            --  txInfoRedeemers ==  [   (Minting    CurrencySymbol      ,   Redeemer)
-            --                      ,   (Spending   TxOutRef            ,   Redeemer)
-            --                      ,   (Rewarding  StakingCredential   ,   Redeemer)
-            --                      ,   (Certifying DCert               ,   Redeemer)
-            --                      ]
 
             getMintingRedeemer :: CurrencySymbol -> RegulatorAction
             getMintingRedeemer cs

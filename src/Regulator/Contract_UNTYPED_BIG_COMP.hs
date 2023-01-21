@@ -34,7 +34,8 @@ import           PlutusTx.Prelude          (Bool (False), Maybe (Just), any,
                                             traceError, traceIfFalse, ($), (&&),
                                             (==))
 
-import           Distro.DataTypes          (DistroDatum (..))
+import           Distro.DataTypes          (DistroDatum (..), PhaseOneInfo (..),
+                                            PhaseTwoInfo (..))
 import           Regulator.DataTypes       (DevTeamAddresses (..),
                                             RegulatorAction (..),
                                             RegulatorParams (..))
@@ -46,18 +47,52 @@ import           Regulator.DataTypes       (DevTeamAddresses (..),
 
 {-# INLINABLE regulatorMintingPolicy #-}
 regulatorMintingPolicy :: RegulatorParams -> BuiltinData -> BuiltinData -> ()
-regulatorMintingPolicy RegulatorParams{ devTeamAddresses = DevTeamAddresses{..}, ..} rawRedeemer rawCTX
+regulatorMintingPolicy
+    RegulatorParams
+        {   phaseOneInfo = PhaseOneInfo{..}
+        ,   phaseTwoInfo = PhaseTwoInfo{..}
+        ,   devTeamAddresses = DevTeamAddresses{..}
+        , ..
+        }
+    rawRedeemer
+    rawCTX
 
     -----------------------------------------------------------------------------------------
     -- |                                   GENESIS MINT                                   |--
     -----------------------------------------------------------------------------------------
     |   GenesisMint <- redeemer
-    ,   DistroDatum happyToken phaseOneInfo' phaseTwoInfo' <- getTxOutInlineDatum txOutToDistro
+
+    ,   DistroDatum
+            happyToken
+            (PhaseOneInfo
+                firstDevPhaseOneClaimAmount'
+                firstDevDidPhaseOne'
+                secondDevPhaseOneClaimAmount'
+                secondDevDidPhaseOne'
+                dateOfPhaseOne')
+            (PhaseTwoInfo
+                firstDevPhaseTwoClaimAmount'
+                firstDevDidPhaseTwo'
+                secondDevPhaseTwoClaimAmount'
+                secondDevDidPhaseTwo'
+                dateOfPhaseTwo') <- getTxOutInlineDatum txOutToDistro
+
     ,   isTokenMintedCorrectly
     ,   valueOf (txOutValue txOutToDistro) (ownCurrencySymbol ctx) happyTokenName == 1
     ,   happyToken      ==  assetClass (ownCurrencySymbol ctx) happyTokenName
-    ,   phaseOneInfo    ==  phaseOneInfo'
-    ,   phaseTwoInfo    ==  phaseTwoInfo'
+    ,   length txInfoOutputs == 2
+
+    ,   firstDevPhaseOneClaimAmount   ==  firstDevPhaseOneClaimAmount'
+    ,   firstDevDidPhaseOne           ==  firstDevDidPhaseOne'
+    ,   secondDevPhaseOneClaimAmount  ==  secondDevPhaseOneClaimAmount'
+    ,   secondDevDidPhaseOne          ==  secondDevDidPhaseOne'
+    ,   dateOfPhaseOne                ==  dateOfPhaseOne'
+
+    ,   firstDevPhaseTwoClaimAmount   ==  firstDevPhaseTwoClaimAmount'
+    ,   firstDevDidPhaseTwo           ==  firstDevDidPhaseTwo'
+    ,   secondDevPhaseTwoClaimAmount  ==  secondDevPhaseTwoClaimAmount'
+    ,   secondDevDidPhaseTwo          ==  secondDevDidPhaseTwo'
+    ,   dateOfPhaseTwo                ==  dateOfPhaseTwo'
     =   ()
 
     -----------------------------------------------------------------------------------------

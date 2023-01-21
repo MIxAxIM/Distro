@@ -46,23 +46,23 @@ check_process cardano-node
 sleep 1
 
 # Get Wallets UTxOs
-# if [[ -f "/tmp/regulator_contract_ref.json" ]]; then
-#     rm /tmp/regulator_contract_ref.json
-# fi
-# printf "$CYAN%b" "[$(date +%Y-%m-%d\ %H:%M:%S)] Getting Contract Refrence Address UTxOs ..."
-# cardano-cli query utxo \
-#     --address "$CONTRACT_REFERENCES_ADDRESS" \
-#     --testnet-magic "$MAGIC_TESTNET_NUMBER" \
-#     --out-file /tmp/regulator_contract_ref.json
-# if [[ $(grep -q >/dev/null 2>&1) == $(grep '[^[:space:]]' /tmp/regulator_contract_ref.json) && -f "/tmp/regulator_contract_ref.json" ]]; then
-#     printf "\n$RED%b\n\n" "[-] ERROR: NO Any UTxOs Found At Contract Refrence Address"
-#     exit
-# fi
-# TXNS=$(jq length /tmp/regulator_contract_ref.json)
-# if [ "$TXNS" -eq "0" ]; then
-#     printf "\n$RED%b\n\n" "[-] ERROR: NO Any UTxOs Found At Contract Refrence Address"
-#     exit
-# fi
+if [[ -f "/tmp/regulator_contract_ref.json" ]]; then
+    rm /tmp/regulator_contract_ref.json
+fi
+printf "$CYAN%b" "[$(date +%Y-%m-%d\ %H:%M:%S)] Getting Contract Refrence Address UTxOs ..."
+cardano-cli query utxo \
+    --address "$CONTRACT_REFERENCES_ADDRESS" \
+    --testnet-magic "$MAGIC_TESTNET_NUMBER" \
+    --out-file /tmp/regulator_contract_ref.json
+if [[ $(grep -q >/dev/null 2>&1) == $(grep '[^[:space:]]' /tmp/regulator_contract_ref.json) && -f "/tmp/regulator_contract_ref.json" ]]; then
+    printf "\n$RED%b\n\n" "[-] ERROR: NO Any UTxOs Found At Contract Refrence Address"
+    exit
+fi
+TXNS=$(jq length /tmp/regulator_contract_ref.json)
+if [ "$TXNS" -eq "0" ]; then
+    printf "\n$RED%b\n\n" "[-] ERROR: NO Any UTxOs Found At Contract Refrence Address"
+    exit
+fi
 # txin=$(jq -r --arg allTxIN "" 'keys[] | . + $allTxIN + " --tx-in"' /tmp/regulator_contract_ref.json)
 # contractRefTxIN=${txin::-8}
 contractRefTxIN=$(get_address_biggest_lovelace "$CONTRACT_REFERENCES_ADDRESS")
